@@ -1105,7 +1105,7 @@ def fact(a): return factorial(a)
 def str_to_eval(r):
     r = r.replace("π", "3.141592653589793")
     
-    r = re.sub(r"( [\+\-]?\d+x(\.\d+)? )\!" r'fact(\1)', r)
+    r = re.sub(r"( [\+\-]?\d+x(\.\d+)? )\!", r'fact(\1)', r)
     
     r = re.sub(r"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", r"arrow(\1, \2, \3)", r)
     r = re.sub(r"( [\+\-]?\d+x(\.\d+)? )\^\^( [\+\-]?\d+x(\.\d+)? )", r"tetr(\1, \2)", r)
