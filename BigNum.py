@@ -1101,31 +1101,22 @@ def div(a,b): return divide(a,b)
 def mul(a,b): return multiply(a,b)
 def fact(a): return factorial(a)
 
-# well^3 ////////// r"[\+\-]?\d+(\.\d+)?"
-def dup_con(r, s):
-    g = re.compile(r)
-    return re.compile(f"({g.pattern}){s}({g.pattern})")
-def mrg_con(r, s):
-    g = re.compile(r)
-    return re.compile(f"({g.pattern}){s}")
-
+# well^3 ////////// r"( [\+\-]?\d+x(\.\d+)? )"
 def str_to_eval(r):
-    g = r"[\+\-]?\d+(\.\d+)?"
-    
     r = r.replace("π", "3.141592653589793")
     
-    r = re.sub(mrg_con(g,"\!"), r'fact(\1)', r)
+    r = re.sub(r"( [\+\-]?\d+x(\.\d+)? )\!" r'fact(\1)', r)
     
-    r = re.sub(r"(.+)\{(.+)\}(.+)", r"arrow(\1, \2, \3)", r)
-    r = re.sub(dup_con(g,"\^\^"), r"tetr(\1, \2)", r)
-    r = re.sub(dup_con(g,"\^"), r"pow(\1, \2)", r)
-    r = re.sub(dup_con(g,"\*"), r"mul(\1, \2)", r)
-    r = re.sub(dup_con(g,"\/"), r"div(\1, \2)", r)
-    r = re.sub(dup_con(g,"\+"), r"add(\1, \2)", r)
-    r = re.sub(dup_con(g,"\-"), r"sub(\1, \2)", r)
+    r = re.sub(r"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", r"arrow(\1, \2, \3)", r)
+    r = re.sub(r"( [\+\-]?\d+x(\.\d+)? )\^\^( [\+\-]?\d+x(\.\d+)? )", r"tetr(\1, \2)", r)
+    r = re.sub(r"( [\+\-]?\d+x(\.\d+)? )\^( [\+\-]?\d+x(\.\d+)? )", r"pow(\1, \2)", r)
+    r = re.sub(r"( [\+\-]?\d+x(\.\d+)? )\*( [\+\-]?\d+x(\.\d+)? )", r"mul(\1, \2)", r)
+    r = re.sub(r"( [\+\-]?\d+x(\.\d+)? )\/( [\+\-]?\d+x(\.\d+)? )", r"div(\1, \2)", r)
+    r = re.sub(r"( [\+\-]?\d+x(\.\d+)? )\+( [\+\-]?\d+x(\.\d+)? )", r"add(\1, \2)", r)
+    r = re.sub(r"( [\+\-]?\d+x(\.\d+)? )\-( [\+\-]?\d+x(\.\d+)? )", r"sub(\1, \2)", r)
     
-    r = re.sub(dup_con(g,"\<"), r"lt(\1, \2)", r)
-    r = re.sub(dup_con(g,"\<="), r"lte(\1, \2)", r)
-    r = re.sub(dup_con(g,"\>"), r"gt(\1, \2)", r)
-    r = re.sub(dup_con(g,"\>="), r"gte(\1, \2)", r)
+    r = re.sub(r"( [\+\-]?\d+x(\.\d+)? )\<( [\+\-]?\d+x(\.\d+)? )", r"lt(\1, \2)", r)
+    r = re.sub(r"( [\+\-]?\d+x(\.\d+)? )\<\=( [\+\-]?\d+x(\.\d+)? )", r"lte(\1, \2)", r)
+    r = re.sub(r"( [\+\-]?\d+x(\.\d+)? )\>( [\+\-]?\d+x(\.\d+)? )", r"gt(\1, \2)", r)
+    r = re.sub(r"( [\+\-]?\d+x(\.\d+)? )\>\=( [\+\-]?\d+x(\.\d+)? )", r"gte(\1, \2)", r)
     return r
