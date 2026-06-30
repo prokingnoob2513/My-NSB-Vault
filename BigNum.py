@@ -1136,3 +1136,114 @@ def str_to_eval(r):
     r = re.sub(r"([\+\-]?\d+x(\.\d+)?)\>\=([\+\-]?\d+x(\.\d+)?)", r"gte(\1, \2)", r)
     """
     return r
+
+
+
+
+
+
+precedence = {
+    "+": 1,
+    "-": 1,
+    "*": 2,
+    "/": 2,
+    "^": 3,
+    "!": 4,
+}
+
+def parser(expr: str):
+    expr = expr.replace(" ", "")
+
+    output = []
+    operators = []
+
+    can_be_unary = True
+
+    operator_names = {
+        "+": "add",
+        "-": "sub",
+        "*": "mul",
+        "/": "div",
+        "^": "pow",
+    }
+
+    def applyOperation():
+        op = operators.pop()
+
+        if op == "!":
+            a = output.pop()
+            output.append(f"factorial({a})")
+            return
+
+        b = output.pop()
+        a = output.pop()
+        output.append(f"{operator_names[op]}({a},{b})")
+
+    i = 0
+    while i < len(expr):
+        char = expr[i]
+        if char.isdigit() or char == ".":
+            num = char
+            while (i + 1 < len(expr) and (expr[i + 1].isdigit() or expr[i + 1] in ".eE")):
+                i += 1
+                num += expr[i]
+
+            output.append(num)
+            can_be_unary = False
+
+        elif char.isalpha() or char == "_":
+            ident = char
+
+            while (i + 1 < len(expr) and (expr[i + 1].isalnum() or expr[i + 1] == "_")):
+                i += 1
+                ident += expr[i]
+
+            if i + 1 < len(expr) and expr[i + 1] == "(": operators.append(ident)
+            else: output.append(ident)
+
+            can_be_unary = False
+
+        elif char == "(":
+            operators.append("(")
+            can_be_unary = True
+
+        elif char == ")":
+            while operators and operators[-1] != "(":
+                applyOperation()
+
+            operators.pop()
+
+            if operators and operators[-1].isidentifier():
+                func = operators.pop()
+                arg = output.pop()
+                output.append(f"{func}({arg})")
+
+            can_be_unary = False
+
+        elif char in "+-" and can_be_unary:
+            if char == "-":
+                output.append("0")
+                operators.append("-")
+
+            can_be_unary = True
+
+        elif char == "!":
+            operators.append("!")
+            applyOperation()
+            can_be_unary = False
+
+        else:
+            while (operators and operators[-1] != "(" and operators[-1] in precedence
+                and (precedence[operators[-1]] > precedence[char]
+                or (precedence[operators[-1]] == precedence[char] and char != "^"))):
+                applyOperation()
+
+            operators.append(char)
+            can_be_unary = True
+
+        i += 1
+
+    while operators:
+        applyOperation()
+
+    return output[0]
