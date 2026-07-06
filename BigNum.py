@@ -48,7 +48,7 @@ def correct(x):
         s = s.replace("1e", "e")
         if s.startswith("E") or s.startswith("-E"): return from_hyper_e(s)
         if any(c in "}^)e" for c in s): return fromstring(s)
-        try: return float(x)
+        try: return correct(float(x))
         except: pass
         raise NotImplementedError("Can't convert the format you input")
         return fromformat(s)
