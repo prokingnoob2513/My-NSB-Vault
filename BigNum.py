@@ -1151,56 +1151,90 @@ precedence = {
     "!": 4,
 }
 
+operator_names = {
+    "+": "add",
+    "-": "sub",
+    "*": "mul",
+    "/": "div",
+    "^": "pow",
+}
+
+class ParseError(ValueError):
+    pass
+
+def error(expr, i, msg):
+    start = max(0, i - 8)
+    end = min(len(expr), i + 8)
+    pointer = " " * (i - start) + "^"
+    raise ParseError(f"{msg} at position {i}\n{expr[start:end]}\n{pointer}")
+
 def parser(expr: str):
-    expr = expr.replace(" ", "")
+    expr = expr.replace(" ", "").replace("pi", str(math.pi)).replace("**", "^").replace("×", "*") \
+        .replace("⋅", "*").replace("÷", "/").replace(":", "/").replace("√", "sqrt").replace("↑", "^") \
+        .replace("π", str(math.pi)).replace("π", str(math.pi))
+    
+    if expr.count("(") > expr.count(")"): raise ParseError("More closing parenthesis than ending parenthesis")
+    elif expr.count("(") < expr.count(")"): raise ParseError("More ending parenthesis than closing parenthesis")
 
     output = []
     operators = []
 
     can_be_unary = True
 
-    operator_names = {
-        "+": "add",
-        "-": "sub",
-        "*": "mul",
-        "/": "div",
-        "^": "pow",
-    }
+    def operationSymbol(op):
+        return op[0] if isinstance(op, tuple) else op
 
     def applyOperation():
+        if not operators:
+            raise ParseError("Internal parser error: no operator to apply")
+
         op = operators.pop()
 
-        if op == "!":
+        if isinstance(op, tuple) and op[0] == "^":
+            if len(output) < 2:
+                raise ParseError("Not enough operands for '^'")
+            b = output.pop()
             a = output.pop()
-            output.append(f"factorial({a})")
+            _, count = op
+            output.append(f"arrow({a},{count},{b})")
             return
+
+        if op[0] == "!":
+            if not output:
+                raise ParseError("Missing operand for '!'")
+            a = output.pop()
+            output.append(f"fact({a})")
+            return
+
+        if op[0] not in operator_names and op[0] not in ("(", ")"):
+            _, _, pos = op
+            error(expr, pos, f"Unknown operator: {op}")
 
         b = output.pop()
         a = output.pop()
-        output.append(f"{operator_names[op]}({a},{b})")
+        output.append(f"{operator_names[op[0]]}({a},{b})")
 
     i = 0
     while i < len(expr):
         char = expr[i]
-        if char.isdigit() or char == ".":
+
+        if char.isdigit() or char in ".eE#":
             num = char
-            while (i + 1 < len(expr) and (expr[i + 1].isdigit() or expr[i + 1] in ".eE")):
+            while i + 1 < len(expr) and (expr[i + 1].isdigit() or expr[i + 1] in ".eE#"):
                 i += 1
                 num += expr[i]
-
-            output.append(num)
+            output.append(f"'{num}'")
             can_be_unary = False
 
         elif char.isalpha() or char == "_":
             ident = char
-
-            while (i + 1 < len(expr) and (expr[i + 1].isalnum() or expr[i + 1] == "_")):
+            while i + 1 < len(expr) and (expr[i + 1].isalnum() or expr[i + 1] == "_"):
                 i += 1
                 ident += expr[i]
-
-            if i + 1 < len(expr) and expr[i + 1] == "(": operators.append(ident)
-            else: output.append(ident)
-
+            if i + 1 < len(expr) and expr[i + 1] == "(":
+                operators.append(ident)
+            else:
+                output.append(ident)
             can_be_unary = False
 
         elif char == "(":
@@ -1208,23 +1242,37 @@ def parser(expr: str):
             can_be_unary = True
 
         elif char == ")":
-            while operators and operators[-1] != "(":
+            while operators and operationSymbol(operators[-1]) != "(":
                 applyOperation()
+
+            if not operators:
+                error(expr, i, "Unmatched closing parenthesis")
 
             operators.pop()
 
-            if operators and operators[-1].isidentifier():
+            if operators and isinstance(operators[-1], str) and operators[-1].isidentifier():
                 func = operators.pop()
-                arg = output.pop()
-                output.append(f"{func}({arg})")
 
+                if not output:
+                    error(expr, i, f"Function '{func}' is missing an argument")
+
+                args = []
+                while output:
+                    x = output.pop()
+                    if x == "__ARG__":
+                        continue
+                    args.append(x)
+                    if not output or output[-1] != "__ARG__":
+                        break
+
+                args.reverse()
+                output.append(f"{func}({','.join(args)})")
             can_be_unary = False
 
         elif char in "+-" and can_be_unary:
             if char == "-":
                 output.append("0")
                 operators.append("-")
-
             can_be_unary = True
 
         elif char == "!":
@@ -1232,13 +1280,47 @@ def parser(expr: str):
             applyOperation()
             can_be_unary = False
 
-        else:
-            while (operators and operators[-1] != "(" and operators[-1] in precedence
-                and (precedence[operators[-1]] > precedence[char]
-                or (precedence[operators[-1]] == precedence[char] and char != "^"))):
+        elif char == "^":
+            count = 1
+            while i + 1 < len(expr) and expr[i + 1] == "^":
+                i += 1
+                count += 1
+
+            while (
+                operators
+                and operationSymbol(operators[-1]) != "("
+                and operationSymbol(operators[-1]) in precedence
+                and (
+                    precedence[operationSymbol(operators[-1])] > precedence["^"]
+                    or (precedence[operationSymbol(operators[-1])] == precedence["^"] and False)
+                )
+            ):
                 applyOperation()
 
-            operators.append(char)
+            operators.append(("^", count))
+            can_be_unary = True
+        elif char == ",":
+            while operators and operationSymbol(operators[-1]) != "(":
+                applyOperation()
+
+            if not operators:
+                error(expr, i, "Comma outside function call")
+
+            output.append("__ARG__")
+            can_be_unary = True
+        else:
+            while (
+                operators
+                and operationSymbol(operators[-1]) != "("
+                and operationSymbol(operators[-1]) in precedence
+                and (
+                    precedence[operationSymbol(operators[-1])] > precedence[char]
+                    or (precedence[operationSymbol(operators[-1])] == precedence[char] and char != "^")
+                )
+            ):
+                applyOperation()
+
+            operators.append((char, None, i))
             can_be_unary = True
 
         i += 1
