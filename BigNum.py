@@ -1119,20 +1119,6 @@ def str_to_eval(r):
     r = re.sub(r"(.+)\<\=(.+)", r"lte(\1, \2)", r)
     r = re.sub(r"(.+)\>(.+)", r"gt(\1, \2)", r)
     r = re.sub(r"(.+)\>\=(.+)", r"gte(\1, \2)", r)
-    '''
-    r = re.sub(r"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", r"arrow(\1, \2, \3)", r)
-    r = re.sub(r"([\+\-]?\d+x(\.\d+)?)\^\^([\+\-]?\d+x(\.\d+)?)", r"tetr(\1, \2)", r)
-    r = re.sub(r"([\+\-]?\d+x(\.\d+)?)\^([\+\-]?\d+x(\.\d+)?)", r"pow(\1, \2)", r)
-    r = re.sub(r"([\+\-]?\d+x(\.\d+)?)\*([\+\-]?\d+x(\.\d+)?)", r"mul(\1, \2)", r)
-    r = re.sub(r"([\+\-]?\d+x(\.\d+)?)\/([\+\-]?\d+x(\.\d+)?)", r"div(\1, \2)", r)
-    r = re.sub(r"([\+\-]?\d+x(\.\d+)?)\+([\+\-]?\d+x(\.\d+)?)", r"add(\1, \2)", r)
-    r = re.sub(r"([\+\-]?\d+x(\.\d+)?)\-([\+\-]?\d+x(\.\d+)?)", r"sub(\1, \2)", r)
-
-    r = re.sub(r"([\+\-]?\d+x(\.\d+)?)\<([\+\-]?\d+x(\.\d+)?)", r"lt(\1, \2)", r)
-    r = re.sub(r"([\+\-]?\d+x(\.\d+)?)\<\=([\+\-]?\d+x(\.\d+)?)", r"lte(\1, \2)", r)
-    r = re.sub(r"([\+\-]?\d+x(\.\d+)?)\>([\+\-]?\d+x(\.\d+)?)", r"gt(\1, \2)", r)
-    r = re.sub(r"([\+\-]?\d+x(\.\d+)?)\>\=([\+\-]?\d+x(\.\d+)?)", r"gte(\1, \2)", r)
-    '''
     return r
 
 
